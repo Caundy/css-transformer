@@ -63,7 +63,7 @@ const transformHyphens = text => {
   return clearText;
 };
 
-const removeSemicolons = text => text.replace(/\;/g, "");
+const removeSemicolons = text => text.replace(/;/g, "");
 
 const finalizeTransformation = text => {
   const lines = getTextLines(text);
@@ -74,20 +74,29 @@ const finalizeTransformation = text => {
       return;
     }
     const [property, value] = line.trim().split(":");
-    result += `${property.trim()}: ${ensureFormatting(property, value)},\n`;
+    result += `  ${property.trim()}: ${ensureFormatting(property, value)},\n`;
   });
   return result;
 };
 
 const removeExtraChars = text => transformHyphens(removeSemicolons(text));
 
-const App = () => {
+const copyNatifiedCss = ref => {
+  ref.select();
+  ref.setSelectionRange(0, 99999);
+  document.execCommand("copy");
+};
+
+const CssDecepticon = () => {
   const [inputValue, setInputValue] = useState("");
+  const [preRef, setPreRef] = useState(null);
 
   const reactNatifyCss = copiedCss => {
     try {
-      const prettyCss = finalizeTransformation(removeExtraChars(copiedCss));
+      const strippedCss = removeExtraChars(copiedCss);
+      const prettyCss = finalizeTransformation(strippedCss);
       setInputValue(prettyCss);
+      setTimeout(() => copyNatifiedCss(preRef));
     } catch (err) {
       setInputValue("DAFUQ U DID");
     }
@@ -98,28 +107,33 @@ const App = () => {
   return (
     <div className="App">
       <header>CSS DECEPTICON</header>
-      <div
-        style={{
-          display: "flex",
-          minHeight: "100vh",
-          border: "1px solid red"
-        }}
-      >
-        <div style={{ flex: 1, minHeight: "100vh" }}>
-          <textarea
-            autoFocus
-            onChange={handleChange}
-            type="text"
-            style={{ height: "100%", width: "100%" }}
-          />
-          <button type="button" onClick={() => {}}></button>
+      <div className="contentContainer">
+        <div className="side">
+          <h1>Copy web CSS here</h1>
+          <div className="textareaContainer">
+            <textarea
+              autoFocus
+              onChange={handleChange}
+              type="text"
+              style={{ height: "100%", width: "100%" }}
+            />
+          </div>
         </div>
-        <div style={{ flex: 1, minHeight: "100vh" }}>
-          <pre>{inputValue}</pre>
+        <div className="side">
+          <h1>Get RN version</h1>
+          <div className="textareaContainer">
+            <textarea
+              readOnly
+              ref={ref => setPreRef(ref)}
+              type="text"
+              style={{ height: "100%", width: "100%" }}
+              value={inputValue}
+            />
+          </div>
         </div>
       </div>
     </div>
   );
 };
 
-export default App;
+export default CssDecepticon;
