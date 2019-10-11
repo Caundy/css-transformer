@@ -2,31 +2,8 @@ import React, { useState } from "react";
 import "./App.css";
 
 const NUMBERS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
+
 const TEXT_NUMBER_PROPS = ["fontWeight"];
-
-String.prototype.replaceAt = function(index, replacement) {
-  return (
-    this.substr(0, index) +
-    replacement +
-    this.substr(index + 1 + replacement.length)
-  );
-};
-
-const replaceAt = (string, index, replacement) => {
-  return (
-    string.substr(0, index) +
-    replacement +
-    string.substr(index + 1 + replacement.length)
-  );
-};
-
-const ensureFormatting = (property, value) => {
-  const transformedValue = `${transformValue(value.trim())}`;
-  const formattedValue = TEXT_NUMBER_PROPS.includes(property)
-    ? `'${transformedValue}'`
-    : transformedValue;
-  return formattedValue;
-};
 
 const includesNumbers = text => NUMBERS.some(number => text.includes(number));
 
@@ -42,18 +19,20 @@ const isWithinRange = (string, index) => index < string.length;
 
 const getTextLines = text => text.split("\n");
 
-const finishHim = text => {
-  const lines = getTextLines(text);
-  let result = "";
-  lines.forEach(line => {
-    if (isBracket(line)) {
-      result += `${line}\n`;
-      return;
-    }
-    const [property, value] = line.trim().split(":");
-    result += `${property.trim()}: ${ensureFormatting(property, value)},\n`;
-  });
-  return result;
+const replaceAt = (string, index, replacement) => {
+  return (
+    string.substr(0, index) +
+    replacement +
+    string.substr(index + 1 + replacement.length)
+  );
+};
+
+const ensureFormatting = (property, value) => {
+  const transformedValue = `${transformValue(value.trim())}`;
+  const formattedValue = TEXT_NUMBER_PROPS.includes(property)
+    ? `'${transformedValue}'`
+    : transformedValue;
+  return formattedValue;
 };
 
 const transformValue = value => {
@@ -84,19 +63,37 @@ const transformHyphens = text => {
   return clearText;
 };
 
-function App() {
+const removeSemicolons = text => text.replace(/\;/g, "");
+
+const finalizeTransformation = text => {
+  const lines = getTextLines(text);
+  let result = "";
+  lines.forEach(line => {
+    if (isBracket(line)) {
+      result += `${line}\n`;
+      return;
+    }
+    const [property, value] = line.trim().split(":");
+    result += `${property.trim()}: ${ensureFormatting(property, value)},\n`;
+  });
+  return result;
+};
+
+const removeExtraChars = text => transformHyphens(removeSemicolons(text));
+
+const App = () => {
   const [inputValue, setInputValue] = useState("");
 
-  const transform = uglyCss => {
+  const reactNatifyCss = copiedCss => {
     try {
-      let prettyCss = uglyCss.replace(/\;/g, "");
-      prettyCss = transformHyphens(prettyCss);
-      prettyCss = finishHim(prettyCss);
+      const prettyCss = finalizeTransformation(removeExtraChars(copiedCss));
       setInputValue(prettyCss);
     } catch (err) {
       setInputValue("DAFUQ U DID");
     }
   };
+
+  const handleChange = event => reactNatifyCss(event.target.value);
 
   return (
     <div className="App">
@@ -110,7 +107,8 @@ function App() {
       >
         <div style={{ flex: 1, minHeight: "100vh" }}>
           <textarea
-            onChange={e => transform(e.target.value)}
+            autoFocus
+            onChange={handleChange}
             type="text"
             style={{ height: "100%", width: "100%" }}
           />
@@ -122,6 +120,6 @@ function App() {
       </div>
     </div>
   );
-}
+};
 
 export default App;
