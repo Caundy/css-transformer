@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import logo from "./logo.svg";
 import "./App.css";
 
+const NUMBERS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
+const TEXT_NUMBER_PROPS = ["fontWeight"];
+
 String.prototype.replaceAt = function(index, replacement) {
   return (
     this.substr(0, index) +
@@ -10,46 +13,51 @@ String.prototype.replaceAt = function(index, replacement) {
   );
 };
 
-const includesNumbers = text =>
-  ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"].some(number =>
-    text.includes(number)
-  );
+const ensureFormatting = (property, value) => {
+  const transformedValue = `${transformValue(value.trim())}`;
+  const formattedValue = TEXT_NUMBER_PROPS.includes(property)
+    ? `'${transformedValue}'`
+    : transformedValue;
+  return formattedValue;
+};
+
+const includesNumbers = text => NUMBERS.some(number => text.includes(number));
+
+const isNumerical = text => includesNumbers(text) || text === ".";
 
 const isBracket = line => ["{", "}"].some(sign => line.includes(sign));
 
-const finishHim = string => {
+const isWithinRange = (string, index) => index < string.length;
+
+const getTextLines = text => text.split("\n");
+
+const finishHim = text => {
+  const lines = getTextLines(text);
   let result = "";
-  const lines = string.split("\n");
   lines.forEach(line => {
     if (isBracket(line)) {
       result += `${line}\n`;
       return;
     }
     const [property, value] = line.trim().split(":");
-    result += `${property.trim()}: ${transformValue(value.trim())},\n`;
+    result += `${property.trim()}: ${ensureFormatting(property, value)},\n`;
   });
   return result;
 };
 
 const transformValue = value => {
-  if (value.startsWith("#")) {
+  if (value.startsWith("#") || !includesNumbers(value)) {
     return `'${value}'`;
   }
   if (includesNumbers(value)) {
-    console.warn(`"${value}"`);
-
+    // todo: reduce
     let number = "";
-
     value.split("").forEach(sign => {
-      if (includesNumbers(sign) || sign === ".") {
+      if (isNumerical(sign)) {
         number += sign;
       }
     });
-
-    console.log(number);
     return number;
-  } else {
-    return `'${value}'`;
   }
 };
 
@@ -65,22 +73,23 @@ const transformHyphens = string => {
   return prettyCss;
 };
 
-const isWithinRange = (string, index) => index < string.length;
-
 function App() {
   const [inputValue, setInputValue] = useState("");
 
   const transform = uglyCss => {
-    let prettyCss = uglyCss.replace(/\;/g, "");
-    prettyCss = transformHyphens(prettyCss);
-    prettyCss = finishHim(prettyCss);
-
-    setInputValue(prettyCss);
+    try {
+      let prettyCss = uglyCss.replace(/\;/g, "");
+      prettyCss = transformHyphens(prettyCss);
+      prettyCss = finishHim(prettyCss);
+      setInputValue(prettyCss);
+    } catch (err) {
+      setInputValue("DAFUQ U DID");
+    }
   };
 
   return (
     <div className="App">
-      <header>JOTPE</header>
+      <header>CSS DECEPTICON</header>
       <div
         style={{
           display: "flex",
