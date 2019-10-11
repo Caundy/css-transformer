@@ -1,0 +1,10 @@
+{
+  height: 18px;
+  width: 225px;
+  color: #042C5C;
+  font-family: Nunito;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.33px;
+  line-height: 18px;
+}
