@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import logo from "./logo.svg";
 import "./App.css";
 
 const NUMBERS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
@@ -10,6 +9,14 @@ String.prototype.replaceAt = function(index, replacement) {
     this.substr(0, index) +
     replacement +
     this.substr(index + 1 + replacement.length)
+  );
+};
+
+const replaceAt = (string, index, replacement) => {
+  return (
+    string.substr(0, index) +
+    replacement +
+    string.substr(index + 1 + replacement.length)
   );
 };
 
@@ -26,6 +33,10 @@ const includesNumbers = text => NUMBERS.some(number => text.includes(number));
 const isNumerical = text => includesNumbers(text) || text === ".";
 
 const isBracket = line => ["{", "}"].some(sign => line.includes(sign));
+
+const isColor = text => text.startsWith("#") || text.includes("rgb");
+
+const isText = text => !includesNumbers(text);
 
 const isWithinRange = (string, index) => index < string.length;
 
@@ -46,7 +57,7 @@ const finishHim = text => {
 };
 
 const transformValue = value => {
-  if (value.startsWith("#") || !includesNumbers(value)) {
+  if (isColor(value) || isText(value)) {
     return `'${value}'`;
   }
   if (includesNumbers(value)) {
@@ -61,16 +72,16 @@ const transformValue = value => {
   }
 };
 
-const transformHyphens = string => {
-  let prettyCss = string;
-  while (prettyCss.indexOf("-") !== -1) {
-    const firstHyphenIndex = prettyCss.indexOf("-");
-    const letterToUppercase = isWithinRange(prettyCss, firstHyphenIndex + 1)
-      ? prettyCss[firstHyphenIndex + 1].toUpperCase()
+const transformHyphens = text => {
+  let clearText = text;
+  while (clearText.indexOf("-") !== -1) {
+    const hyphenIndex = clearText.indexOf("-");
+    const letterToUppercase = isWithinRange(clearText, hyphenIndex + 1)
+      ? clearText[hyphenIndex + 1].toUpperCase()
       : "";
-    prettyCss = prettyCss.replaceAt(firstHyphenIndex, letterToUppercase);
+    clearText = replaceAt(clearText, hyphenIndex, letterToUppercase);
   }
-  return prettyCss;
+  return clearText;
 };
 
 function App() {
